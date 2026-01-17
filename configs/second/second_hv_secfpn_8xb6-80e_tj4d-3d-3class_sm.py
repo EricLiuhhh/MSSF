@@ -1,0 +1,159 @@
+_base_ = [
+    '../_base_/models/second_hv_secfpn_voxel05_tj4d_multimodal.py',
+    '../_base_/datasets/tj4d-3d-4class.py',
+    '../_base_/schedules/cyclic-40e.py', '../_base_/default_runtime.py'
+]
+
+#runner_type = 'FastRunner'
+point_cloud_range = [0, -40, -4, 70.4, 40, 2]
+data_root = 'data/tj4d/'
+class_names = ['Pedestrian', 'Cyclist', 'Car', 'Truck']
+input_modality = dict(use_lidar=True, use_camera=False)
+metainfo = dict(classes=class_names)
+use_dim = [0, 1, 2, 8, 5]
+
+model = dict(
+    data_preprocessor=dict(
+        voxel_layer=dict(point_cloud_range=point_cloud_range)),
+    middle_encoder=dict(optional_cfg=dict(use_img=False)),
+    #bbox_head=dict(bbox_coder=dict(pc_range=point_cloud_range[:2], score_threshold=0.02)),
+    # model training and testing settings
+    #train_cfg=dict(pts=dict(point_cloud_range=point_cloud_range)),
+    #test_cfg=dict(pts=dict(pc_range=point_cloud_range[:2], score_threshold=0.02))
+    )
+
+dataset_type = 'TJ4DDataset'
+backend_args = None
+
+train_pipeline = [
+    dict(
+        type='LoadPointsFromFile',
+        coord_type='LIDAR',
+        load_dim=9,
+        use_dim=use_dim,
+        backend_args=backend_args),
+    # dict(type='LoadImageFromFile', 
+    #      backend_args=backend_args,
+    #      color_type='unchanged',
+    #      to_float32=False),
+    # dict(type='LoadPrecomputeImgFeats',
+    #      data_path='/home/lhs/mmdetection3d/data/precompute_img_feats'),
+    dict(type='LoadAnnotations3D', with_bbox_3d=True, with_label_3d=True),
+    #dict(type='ObjectSample', db_sampler=db_sampler, use_ground_plane=True),
+    dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
+    dict(
+        type='GlobalRotScaleTrans',
+        rot_range=[-0.78539816, 0.78539816],
+        scale_ratio_range=[0.95, 1.05]),
+    dict(type='PointsRangeFilter', point_cloud_range=point_cloud_range),
+    dict(type='ObjectRangeFilter', point_cloud_range=point_cloud_range),
+    dict(type='PointShuffle'),
+    dict(
+        type='Pack3DDetInputs',
+        keys=['points', 'gt_labels_3d', 'gt_bboxes_3d'])
+]
+test_pipeline = [
+    dict(
+        type='LoadPointsFromFile',
+        coord_type='LIDAR',
+        load_dim=9,
+        use_dim=use_dim,
+        backend_args=backend_args),
+    # dict(type='LoadImageFromFile', 
+    #      backend_args=backend_args,
+    #      to_float32=False,
+    #      color_type='unchanged',),
+    dict(
+        type='MultiScaleFlipAug3D',
+        img_scale=(1333, 800),
+        pts_scale_ratio=1,
+        flip=False,
+        transforms=[
+            dict(
+                type='GlobalRotScaleTrans',
+                rot_range=[0, 0],
+                scale_ratio_range=[1., 1.],
+                translation_std=[0, 0, 0]),
+            dict(type='RandomFlip3D'),
+            dict(
+                type='PointsRangeFilter', point_cloud_range=point_cloud_range)
+        ]),
+    dict(type='Pack3DDetInputs', keys=['points'])
+]
+
+train_dataloader = dict(batch_size=8,
+    dataset=dict(dataset=dict(pipeline=train_pipeline, metainfo=metainfo, modality=input_modality, data_prefix=dict(pts='training/velodyne_reduced',img='training/image_2'))))
+test_dataloader = dict(dataset=dict(pipeline=test_pipeline, metainfo=metainfo, modality=input_modality, data_prefix=dict(pts='training/velodyne_reduced',img='training/image_2')))
+val_dataloader = dict(dataset=dict(pipeline=test_pipeline, metainfo=metainfo, modality=input_modality, data_prefix=dict(pts='training/velodyne_reduced',img='training/image_2')))
+
+train_cfg = dict(val_interval=2)
+
+#lr = 0.003
+#lr = 0.001
+lr = 0.0002
+#lr = 0.00005
+# The optimizer follows the setting in SECOND.Pytorch, but here we use
+# the official AdamW optimizer implemented by PyTorch.
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='AdamW', lr=lr, betas=(0.95, 0.99), weight_decay=0.01),
+    clip_grad=dict(max_norm=10, norm_type=2))
+# learning rate
+param_scheduler = [
+    # learning rate scheduler
+    # During the first 16 epochs, learning rate increases from 0 to lr * 10
+    # during the next 24 epochs, learning rate decreases from lr * 10 to
+    # lr * 1e-4
+    dict(
+        type='CosineAnnealingLR',
+        T_max=16,
+        eta_min=lr * 10,
+        begin=0,
+        end=16,
+        by_epoch=True,
+        convert_to_iter_based=True),
+    dict(
+        type='CosineAnnealingLR',
+        T_max=24,
+        eta_min=lr * 1e-4,
+        begin=16,
+        end=40,
+        by_epoch=True,
+        convert_to_iter_based=True),
+    # momentum scheduler
+    # During the first 16 epochs, momentum increases from 0 to 0.85 / 0.95
+    # during the next 24 epochs, momentum increases from 0.85 / 0.95 to 1
+    dict(
+        type='CosineAnnealingMomentum',
+        T_max=16,
+        eta_min=0.85 / 0.95,
+        begin=0,
+        end=16,
+        by_epoch=True,
+        convert_to_iter_based=True),
+    dict(
+        type='CosineAnnealingMomentum',
+        T_max=24,
+        eta_min=1,
+        begin=16,
+        end=40,
+        by_epoch=True,
+        convert_to_iter_based=True)
+]
+
+
+default_hooks = dict(
+    checkpoint=dict(type='CheckpointHook', interval=1))
+train_cfg = dict(by_epoch=True, max_epochs=40, val_interval=40)
+
+val_evaluator = [
+    # dict(
+    #     type='FGSegMetric',
+    #     backend_args=backend_args),
+    dict(
+        type='TJ4DMetric',
+        ann_file=data_root + 'kitti_infos_val.pkl',
+        metric='bbox',
+        backend_args=backend_args)
+    ]
+test_evaluator = val_evaluator
