@@ -2,7 +2,8 @@
 
 This is the code for paper "[MSSF: A 4D Radar and Camera Fusion Framework With Multi-Stage Sampling for 3D Object Detection in Autonomous Driving](https://ieeexplore.ieee.org/document/10947638)" (T-TITS 2025). 
 
-MSSF is a simple but effective multi-stage sampling fusion (MSSF) network based on 4D radar and camera for 3D object detection. 
+MSSF is a simple but effective multi-stage sampling fusion (MSSF) network based on 4D radar and camera for 3D object detection.
+![image](asserts/overall.png) 
 
 ## 🔧 Install
 You can prepare environment via conda:
