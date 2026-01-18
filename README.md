@@ -74,6 +74,9 @@ python tools/test.py $CONFIG --checkpoint $CHECKPOINT --metric [VoDMetric,TJ4DMe
 | MSSF-PP | 41.75 | 48.41 |
 
 ### Training
+```bash
+python tools/train.py $CONFIG --work-dir $WORK_DIR
+```
 
 ## 🙏🏻 Acknowledgement
 [MMDetection3D](https://github.com/open-mmlab/mmdetection3d), [OpenPCDet](https://github.com/open-mmlab/OpenPCDet.git), [VoD dataset](https://github.com/tudelft-iv/view-of-delft-dataset), [TJ4DRadSet dataset](https://github.com/TJRadarLab/TJ4DRadSet)
