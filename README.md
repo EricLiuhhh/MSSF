@@ -49,6 +49,9 @@ VoD dataset: python tools/create_data.py --dataset vod --root-path ./data/vod --
 TJ4D dataset: python tools/create_data.py --dataset tj4d --root-path ./data/tj4d --out-dir ./data/tj4d
 ```
 
+### ⚠️ Absolute radial velocity for TJ4DRadSet
+The original TJ4DRadSet provides radar points with an 8-channel feature dimension. Following [RCFusion](https://ieeexplore.ieee.org/abstract/document/10138035) and [RadarMFNet](https://ieeexplore.ieee.org/document/9944629), we compute and append the absolute radial velocity, expanding the channel dimension to 9. The computed absolute radial velocity can be downloaded from [🤗HF](https://huggingface.co/EricLiuhhh/MSSF/blob/main/tj4d_radar_vrc.tar.gz). To read it: np.fromfile('000000.bin', dtype=np.float32)
+
 ## 🚀 Run
 
 ### Checkpoint
