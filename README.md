@@ -2,7 +2,7 @@
 
 This is the code for paper "[MSSF: A 4D Radar and Camera Fusion Framework With Multi-Stage Sampling for 3D Object Detection in Autonomous Driving](https://ieeexplore.ieee.org/document/10947638)" (T-TITS 2025). 
 
-MSSF is a simple but effective multi-stage sampling fusion (MSSF) network based on 4D radar and camera for 3D object detection.
+MSSF is a simple but effective multi-stage sampling fusion network based on 4D radar and camera for 3D object detection. 
 ![image](asserts/overall.png) 
 
 ## 🔧 Install
@@ -85,6 +85,7 @@ python tools/train.py $CONFIG --work-dir $WORK_DIR
 [MMDetection3D](https://github.com/open-mmlab/mmdetection3d), [OpenPCDet](https://github.com/open-mmlab/OpenPCDet.git), [VoD dataset](https://github.com/tudelft-iv/view-of-delft-dataset), [TJ4DRadSet dataset](https://github.com/TJRadarLab/TJ4DRadSet)
 
 ## ⭐️ Citation
+If you find our paper and code useful for your research, please consider citing us and giving a star to our repository:
 ```bibtex
 @ARTICLE{10947638,
   author={Liu, Hongsi and Liu, Jun and Jiang, Guangfeng and Jin, Xin},
